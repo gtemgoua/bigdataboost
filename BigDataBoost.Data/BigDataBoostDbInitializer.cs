@@ -38,34 +38,34 @@ namespace BigDataBoost.Data
                 context.SaveChanges();
             }
 
-            if (!context.Historian.Any())
-            {
-                double startAngle = 0.0;
-                List<DateTime> times = new List<DateTime>();
-                DateTime start = DateTime.UtcNow;
+            //if (!context.Historian.Any())
+            //{
+            //    double startAngle = 0.0;
+            //    List<DateTime> times = new List<DateTime>();
+            //    DateTime start = DateTime.UtcNow;
 
-                for (int i = 0; i < 10; i++)
-                    times.Add(start.AddHours(-1 * i));
+            //    for (int i = 0; i < 10; i++)
+            //        times.Add(start.AddHours(-1 * i));
 
-                for (int pointIndex = 1; pointIndex < 7; pointIndex++)
-                {
-                    startAngle = 0.0;
-                    for (int recIndex = 0; recIndex < 12; recIndex++)
-                    {
-                        TagHist hist_x = new TagHist
-                        {
-                            TagDefId = pointIndex,
-                            TagName = context.Tags.FirstOrDefault(t => t.Id == pointIndex).Name,
-                            TimeStamp = times[recIndex],
-                            Value = GenerateValue(pointIndex, startAngle)
-                        };
-                        startAngle += 30;
-                        context.Historian.Add(hist_x);
-                    }
-                }
-            }
+            //    for (int pointIndex = 1; pointIndex < 7; pointIndex++)
+            //    {
+            //        startAngle = 0.0;
+            //        for (int recIndex = 0; recIndex < 12; recIndex++)
+            //        {
+            //            TagHist hist_x = new TagHist
+            //            {
+            //                TagDefId = pointIndex,
+            //                TagName = context.Tags.FirstOrDefault(t => t.Id == pointIndex).Name,
+            //                TimeStamp = times[recIndex],
+            //                Value = GenerateValue(pointIndex, startAngle)
+            //            };
+            //            startAngle += 30;
+            //            context.Historian.Add(hist_x);
+            //        }
+            //    }
+            //}
 
-            context.SaveChanges();
+            //context.SaveChanges();
         }
 
         private static string[] functions = { "sine", "cosine" };
@@ -92,7 +92,7 @@ namespace BigDataBoost.Data
         {
             // Update all tags with current values
             var tags = context.Tags;
-            DateTime ts = DateTime.UtcNow;
+            DateTime ts = DateTime.Now;
             // remove milliseconds
             ts = ts.AddTicks(-(ts.Ticks % TimeSpan.TicksPerSecond));
 

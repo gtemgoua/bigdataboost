@@ -130,6 +130,8 @@ namespace BigDataBoost.API.Controllers
                 return null;
             if (string.IsNullOrEmpty(EndTime))
                 return null;
+            if (string.IsNullOrEmpty(Frequency))
+                return null;
 
             DateTime pstart = DateTime.Parse(StartTime);
             DateTime pend = DateTime.Parse(EndTime);
@@ -221,48 +223,55 @@ namespace BigDataBoost.API.Controllers
         [HttpGet("TagDataRange/{TagName?}/{StartTime?}/{EndTime?}/{Frequency?}", Name = "GetHistValue")]
         public IActionResult GetHistValue(string TagName, string StartTime, string EndTime, string Frequency)
         {
-            IEnumerable<TagHist> _taghistSnapshot = GetSnapshotValues(TagName, StartTime, EndTime, Frequency);
-
-            if (_taghistSnapshot == null)
-                return NotFound();
-
-            var pagination = Request.Headers["Pagination"];
-
-            if (!string.IsNullOrEmpty(pagination))
+            try
             {
-                string[] vals = pagination.ToString().Split(',');
-                int.TryParse(vals[0], out page);
-                int.TryParse(vals[1], out pageSize);
-            }
+                IEnumerable<TagHist> _taghistSnapshot = GetSnapshotValues(TagName, StartTime, EndTime, Frequency);
 
-            int currentPage = page;
-            int currentPageSize = pageSize;
-            var totalRecs = _taghistSnapshot.Count();
-            var totalPages = (int)Math.Ceiling((double)totalRecs / pageSize);
+                if (_taghistSnapshot == null)
+                    return Ok();
 
-            IEnumerable<TagHist> _tagHist = _taghistSnapshot
-                .Skip((currentPage - 1) * currentPageSize)
-                .Take(currentPageSize)
-                .ToList();
+                var pagination = Request.Headers["Pagination"];
 
-            if (_tagHist != null)
-            {
-                IEnumerable<TagHistViewModel> _taghistVM = Mapper.Map<IEnumerable<TagHist>, IEnumerable<TagHistViewModel>>(_tagHist);
+                if (!string.IsNullOrEmpty(pagination))
+                {
+                    string[] vals = pagination.ToString().Split(',');
+                    int.TryParse(vals[0], out page);
+                    int.TryParse(vals[1], out pageSize);
+                }
 
-                Response.AddPagination(page, pageSize, totalRecs, totalPages);
+                int currentPage = page;
+                int currentPageSize = pageSize;
+                var totalRecs = _taghistSnapshot.Count();
+                var totalPages = (int)Math.Ceiling((double)totalRecs / pageSize);
 
-                var cal = currentPage * currentPageSize;
-                if (cal >= totalRecs)
-                    return new OkObjectResult(_taghistVM);
+                IEnumerable<TagHist> _tagHist = _taghistSnapshot
+                    .Skip((currentPage - 1) * currentPageSize)
+                    .Take(currentPageSize)
+                    .ToList();
+
+                if (_tagHist != null)
+                {
+                    IEnumerable<TagHistViewModel> _taghistVM = Mapper.Map<IEnumerable<TagHist>, IEnumerable<TagHistViewModel>>(_tagHist);
+
+                    Response.AddPagination(page, pageSize, totalRecs, totalPages);
+
+                    var cal = currentPage * currentPageSize;
+                    if (cal >= totalRecs)
+                        return new OkObjectResult(_taghistVM);
+                    else
+                    {
+                        var result = new ObjectResult(_taghistVM);
+
+                        result.StatusCode = (int)HttpStatusCode.PartialContent;
+                        return result;
+                    }
+                }
                 else
                 {
-                    var result = new ObjectResult(_taghistVM);
-
-                    result.StatusCode = (int)HttpStatusCode.PartialContent;
-                    return result;
+                    return Ok();
                 }
             }
-            else
+            catch (Exception)
             {
                 return NotFound();
             }

@@ -15,6 +15,7 @@ using BigDataBoost.API.Core;
 using BigDataBoost.Data.HostedServices;
 using System.Threading.Tasks;
 using System.Threading;
+using System;
 
 namespace BigDataBoost.API
 {
@@ -95,6 +96,9 @@ namespace BigDataBoost.API
             //services.AddSingleton<IHostedService, RealTimeUpdaterService>();
         }
 
+        private Timer valueTimer;
+        private int modValue = 5;
+        private int counter = 0;
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app)
         {
@@ -135,22 +139,34 @@ namespace BigDataBoost.API
 
             BigDataBoostDbInitializer.Initialize(app.ApplicationServices);
 
-            var wtoken = new CancellationTokenSource();
+            valueTimer = new Timer(timer_Elapsed, null, 10000, 10000);
+            
 
-            var task = Task.Factory.StartNew(() =>
-            {
-                int modValue = 5;
-                int counter = 0;
-                while (true)
-                {
-                    wtoken.Token.ThrowIfCancellationRequested();
-                    BigDataBoostDbInitializer.GenerateRunTimeData((counter % modValue == 0? Model.TagStatus.Error : Model.TagStatus.Good));
-                    Thread.Sleep(useRealTimeValuesFrequency * 1000);
-                    counter++;
-                    if (counter > 100)
-                        counter = 0;
-                }
-            });
+
+            //var wtoken = new CancellationTokenSource();
+
+            //var task = Task.Factory.StartNew(() =>
+            //{
+            //    while (true)
+            //    {
+            //        wtoken.Token.ThrowIfCancellationRequested();
+            //        BigDataBoostDbInitializer.GenerateRunTimeData((counter % modValue == 0? Model.TagStatus.Error : Model.TagStatus.Good));
+            //        Thread.Sleep(useRealTimeValuesFrequency * 1000);
+                    
+            //        counter++;
+            //        if (counter > 100)
+            //            counter = 0;
+            //    }
+            //});
         }
+
+        private void timer_Elapsed(object state)
+        {
+            BigDataBoostDbInitializer.GenerateRunTimeData((counter % modValue == 0 ? Model.TagStatus.Error : Model.TagStatus.Good));
+            counter++;
+            if (counter > 100)
+                counter = 0;
+        }
+
     }
 }
